@@ -27,13 +27,13 @@ router.post(
         user.emailAddress &&
         user.password
       ) {
-        await User.create({
+         await User.create({
           firstName: req.body.firstName,
           lastName: req.body.lastName,
           emailAddress: req.body.emailAddress,
           password: req.body.password,
         });
-        res.status(201).location("/");
+        res.status(201).location("/").end();
       } else {
         res.status(400).json({
           message:
