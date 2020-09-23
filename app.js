@@ -3,7 +3,8 @@
 // load modules
 const express = require("express");
 const morgan = require("morgan");
-const userRoutes = require("./routes/user");
+const userRoute = require("./routes/user");
+const courseRoute = require("./routes/course");
 
 const { sequelize, models } = require("./db");
 
@@ -28,7 +29,8 @@ app.get("/", (req, res) => {
 });
 
 // Add routes
-app.use("/api", userRoutes);
+app.use("/api", userRoute);
+app.use("/api", courseRoute);
 
 // send 404 if no other route matched
 app.use((req, res) => {
@@ -66,7 +68,7 @@ app.set("port", process.env.PORT || 4000);
 const server = app.listen(app.get("port"), () => {
   console.log(`Express server is listening on port ${server.address().port}`);
 
-  sequelize.sync().then(() => {
+  sequelize.sync({force:true}).then(() => {
     console.log("Synchronizing the model with the database");
   });
 });

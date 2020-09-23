@@ -1,9 +1,12 @@
 const express = require("express");
 const router = express.Router();
+const bcryptjs = require("bcryptjs");
 
 const { sequelize, models } = require("../db");
 
-const { Course, User } = models;
+const { User } = models;
+
+const authenticateUser = require("../middleware/authenticateUser");
 
 function asyncHandler(cb) {
   return async (req, res, next) => {
@@ -14,6 +17,20 @@ function asyncHandler(cb) {
     }
   };
 }
+
+router.get(
+  "/users",
+  authenticateUser,
+  asyncHandler(async (req, res, next) => {
+    const authUser = req.currentUser;
+    delete authUser.dataValues.password;
+    delete authUser.dataValues.createdAt;
+    delete authUser.dataValues.updatedAt;
+    res.json({
+      authUser,
+    });
+  })
+);
 
 //Send a POST  request to /users to CREATE  a user
 router.post(
@@ -27,11 +44,13 @@ router.post(
         user.emailAddress &&
         user.password
       ) {
-         await User.create({
-          firstName: req.body.firstName,
-          lastName: req.body.lastName,
-          emailAddress: req.body.emailAddress,
-          password: req.body.password,
+        //Hashing the user password before persisting the data in the database
+        user.password = bcryptjs.hashSync(user.password);
+        await User.create({
+          firstName: user.firstName,
+          lastName: user.lastName,
+          emailAddress: user.emailAddress,
+          password: user.password,
         });
         res.status(201).location("/").end();
       } else {
