@@ -5,9 +5,9 @@ In order to make changes to the database users are required to create an account
 
 ## Technologies
 
-Node.js
-Express
-Sequelize ORM
+Node.js,
+Express,
+Sequelize ORM for data modeling, validation and persistence.
 
 ## Getting Started
 
