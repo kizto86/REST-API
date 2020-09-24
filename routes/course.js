@@ -50,9 +50,9 @@ router.get(
 //Send a GET request to /courses/:id to READ(view) a course
 router.get(
   "/courses/:id",
-  authenticateUser,
+  //authenticateUser,
   asyncHandler(async (req, res, next) => {
-    const user = req.currentUser;
+    //const user = req.currentUser;
     const courseID = await Course.findByPk(req.params.id);
     try {
       const course = await Course.findOne({
@@ -69,21 +69,21 @@ router.get(
         ],
       });
       //checks if the course belongs to the current authenticated user
-      if (courseID.userId === user.id) {
-        //checks if any id passed in the where clause points to an existing
-        if (course) {
-          res.json(course);
-        } else {
-          res.status(404).json({
-            message: "course does not exist",
-          });
-        }
+      //if (courseID.userId === user.id) {
+      //checks if any id passed in the where clause points to an existing
+      if (course) {
+        res.json(course);
       } else {
-        res.status(403).json({
-          message:
-            "Authentication Failed. You do not have access to view this course",
+        res.status(404).json({
+          message: "course does not exist",
         });
       }
+      //} else {
+      //res.status(403).json({
+      //message:
+      //"Authentication Failed. You do not have access to view this course",
+      //});
+      //}
     } catch (error) {
       if (error.name === "SequelizeValidationError") {
         const errors = error.errors.map((err) => err.message);
@@ -106,8 +106,8 @@ router.post(
     try {
       if (course.title && course.description) {
         const courses = await Course.create(course);
-        //const courseid = courses.dataValues.id;
-        res.status(201).location("/").end();
+        const courseid = courses.dataValues.id;
+        res.status(201).location(`/courses/${courseid}`).end();
       } else {
         res.status(400).json({
           message: "course title and course description are required",
