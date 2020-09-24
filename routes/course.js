@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const bcryptjs = require("bcryptjs");
+const { check, validationResult } = require("express-validator");
 
 const { sequelize, models } = require("../db");
 
@@ -38,6 +39,7 @@ router.get(
       if (error.name === "SequelizeValidationError") {
         const errors = error.errors.map((err) => err.message);
         console.error("Validation errors: ", errors);
+        next(error);
       } else {
         throw error;
       }
@@ -86,6 +88,7 @@ router.get(
       if (error.name === "SequelizeValidationError") {
         const errors = error.errors.map((err) => err.message);
         console.error("Validation errors: ", errors);
+        next(error);
       } else {
         throw error;
       }
@@ -114,6 +117,7 @@ router.post(
       if (error.name === "SequelizeValidationError") {
         const errors = error.errors.map((err) => err.message);
         console.error("Validation errors: ", errors);
+        next(error);
       } else {
         throw error;
       }
@@ -124,38 +128,56 @@ router.post(
 //send a PUT request to /course/:id to update a course
 router.put(
   "/courses/:id",
+  [
+    check("title")
+      .exists({ checkNull: true, checkFalsy: true })
+      .withMessage("Please provide a value for title"),
+    check("description")
+      .exists({ checkNull: true, checkFalsy: true })
+      .withMessage("Please provide a value for description"),
+  ],
   authenticateUser,
   asyncHandler(async (req, res, next) => {
     const user = req.currentUser;
     const course = await Course.findByPk(req.params.id);
     try {
-      //checks that the id points to a valid course(the course exists)
-      if (course) {
-        //checks if the course belongs to the current user
-        if (course.userId === user.id) {
-          await Course.update(
-            {
-              title: req.body.title,
-              description: req.body.description,
-              estimatedTime: req.body.estimatedTime,
-              materialsNeeded: req.body.materialsNeeded,
-            },
-            { where: { id: req.params.id } }
-          );
-          res.status(204).end();
-        } else {
-          res.status(403).json({
-            message:
-              "Authentication Failed. You do not have access to update this course",
-          });
-        }
+      //gets the validation result from the Request object
+      const errors = validationResult(req);
+      //checks if there are validation errors
+      if (!errors.isEmpty()) {
+        //use the array map() method to get the list of error messages
+        const errorMessages = errors.array().map((error) => error.msg);
+        res.status(400).json({ errors: errorMessages });
       } else {
-        res.status(404).json({ message: "Course not found" });
+        //checks that the id points to a valid course(the course exists)
+        if (course) {
+          //checks if the course belongs to the current user
+          if (course.userId === user.id) {
+            await Course.update(
+              {
+                title: req.body.title,
+                description: req.body.description,
+                estimatedTime: req.body.estimatedTime,
+                materialsNeeded: req.body.materialsNeeded,
+              },
+              { where: { id: req.params.id } }
+            );
+            res.status(204).end();
+          } else {
+            res.status(403).json({
+              message:
+                "Authentication Failed. You do not have access to update this course",
+            });
+          }
+        } else {
+          res.status(404).json({ message: "Course not found" });
+        }
       }
     } catch (error) {
       if (error.name === "SequelizeValidationError") {
         const errors = error.errors.map((err) => err.message);
         console.error("Validation errors: ", errors);
+        next(error);
       } else {
         throw error;
       }
@@ -168,17 +190,27 @@ router.delete(
   "/courses/:id",
   authenticateUser,
   asyncHandler(async (req, res, next) => {
-    const user = req.currentUser;
-    const course = await Course.findByPk(req.params.id);
-    //checks if the course belongs to the current authenticated user
-    if (course.userId === user.id) {
-      await course.destroy();
-      res.status(204).end();
-    } else {
-      res.status(403).json({
-        message:
-          "Authentication Failed. You do not have access to delete this course",
-      });
+    try {
+      const user = req.currentUser;
+      const course = await Course.findByPk(req.params.id);
+      //checks if the course belongs to the current authenticated user
+      if (course.userId === user.id) {
+        await course.destroy();
+        res.status(204).end();
+      } else {
+        res.status(403).json({
+          message:
+            "Authentication Failed. You do not have access to delete this course",
+        });
+      }
+    } catch (error) {
+      if (error.name === "SequelizeValidationError") {
+        const errors = error.errors.map((err) => err.message);
+        console.error("Validation errors: ", errors);
+        next(error);
+      } else {
+        throw error;
+      }
     }
   })
 );

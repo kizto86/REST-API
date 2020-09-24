@@ -12,6 +12,7 @@ module.exports = (sequelize) => {
       firstName: {
         type: Sequelize.STRING,
         allowNull: false,
+        unique: true,
       },
       lastName: {
         type: Sequelize.STRING,
@@ -20,6 +21,16 @@ module.exports = (sequelize) => {
       emailAddress: {
         type: Sequelize.STRING,
         allowNull: false,
+        unique: {
+          args: true,
+          msg:
+            "Oops,Looks like you already have an account with this email address. Email address must be unique",
+        },
+        validate: {
+          isEmail: {
+            msg: "The email address you provided is not valid email",
+          },
+        },
       },
       password: {
         type: Sequelize.STRING,

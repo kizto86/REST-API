@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const bcryptjs = require("bcryptjs");
+const { check, validationResult } = require("express-validator");
 
 const { sequelize, models } = require("../db");
 
@@ -53,6 +54,7 @@ router.post(
           emailAddress: user.emailAddress,
           password: user.password,
         });
+
         res.status(201).location("/").end();
       } else {
         res.status(400).json({
@@ -64,6 +66,7 @@ router.post(
       if (error.name === "SequelizeValidationError") {
         const errors = error.errors.map((err) => err.message);
         console.error("Validation errors: ", errors);
+        next(error);
       } else {
         throw error;
       }
