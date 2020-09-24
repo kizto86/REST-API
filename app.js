@@ -68,7 +68,7 @@ app.set("port", process.env.PORT || 4000);
 const server = app.listen(app.get("port"), () => {
   console.log(`Express server is listening on port ${server.address().port}`);
 
-  sequelize.sync({force:true}).then(() => {
+  sequelize.sync().then(() => {
     console.log("Synchronizing the model with the database");
   });
 });

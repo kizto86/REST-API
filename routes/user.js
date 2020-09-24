@@ -17,6 +17,7 @@ function asyncHandler(cb) {
     }
   };
 }
+//Send a GET request to /users to READ the current authenticated user
 
 router.get(
   "/users",
@@ -69,7 +70,5 @@ router.post(
     }
   })
 );
-
-//Send a GET request to /users to READ the current authenticated user
 
 module.exports = router;

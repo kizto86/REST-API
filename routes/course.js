@@ -18,36 +18,9 @@ function asyncHandler(cb) {
   };
 }
 
-//Send a POST  request to /courses to CREATE  a course
-router.post(
-  "/courses",
-  authenticateUser,
-  asyncHandler(async (req, res, next) => {
-    const course = req.body;
-    try {
-      if (course.title && course.description) {
-        const courses = await Course.create(req.body);
-        res.status(201).json(courses);
-      } else {
-        res.status(400).json({
-          message: "course title and course description are required",
-        });
-      }
-    } catch (error) {
-      if (error.name === "SequelizeValidationError") {
-        const errors = error.errors.map((err) => err.message);
-        console.error("Validation errors: ", errors);
-      } else {
-        throw error;
-      }
-    }
-  })
-);
-
 //Send a GET  request to /courses to Read  a list of courses
 router.get(
   "/courses",
-  authenticateUser,
   asyncHandler(async (req, res, next) => {
     try {
       const courses = await Course.findAll({
@@ -77,8 +50,9 @@ router.get(
   "/courses/:id",
   authenticateUser,
   asyncHandler(async (req, res, next) => {
+    const user = req.currentUser;
+    const courseID = await Course.findByPk(req.params.id);
     try {
-      //const _id = req.params.id;
       const course = await Course.findOne({
         attributes: ["id", "title", "description", "estimatedTime"],
         where: {
@@ -92,11 +66,48 @@ router.get(
           },
         ],
       });
-      if (course) {
-        res.json(course);
+      //checks if the course belongs to the current authenticated user
+      if (courseID.userId === user.id) {
+        //checks if any id passed in the where clause points to an existing
+        if (course) {
+          res.json(course);
+        } else {
+          res.status(404).json({
+            message: "course does not exist",
+          });
+        }
       } else {
-        res.status(404).json({
-          message: "course does not exist",
+        res.status(403).json({
+          message:
+            "Authentication Failed. You do not have access to view this course",
+        });
+      }
+    } catch (error) {
+      if (error.name === "SequelizeValidationError") {
+        const errors = error.errors.map((err) => err.message);
+        console.error("Validation errors: ", errors);
+      } else {
+        throw error;
+      }
+    }
+  })
+);
+
+//Send a POST  request to /courses to CREATE  a course
+router.post(
+  "/courses",
+  authenticateUser,
+  asyncHandler(async (req, res, next) => {
+    const user = req.currentUser;
+    const course = req.body;
+    try {
+      if (course.title && course.description) {
+        const courses = await Course.create(course);
+        //const courseid = courses.dataValues.id;
+        res.status(201).location("/").end();
+      } else {
+        res.status(400).json({
+          message: "course title and course description are required",
         });
       }
     } catch (error) {
@@ -111,20 +122,35 @@ router.get(
 );
 
 //send a PUT request to /course/:id to update a course
-
-//Send a DELETE request to /course/:id to Delete a course
-router.delete(
+router.put(
   "/courses/:id",
   authenticateUser,
   asyncHandler(async (req, res, next) => {
+    const user = req.currentUser;
+    const course = await Course.findByPk(req.params.id);
     try {
-      const _id = req.params.id;
-      const course = await Course.findByPk(_id);
+      //checks that the id points to a valid course(the course exists)
       if (course) {
-        await course.destroy();
-        res.status(204).end();
+        //checks if the course belongs to the current user
+        if (course.userId === user.id) {
+          await Course.update(
+            {
+              title: req.body.title,
+              description: req.body.description,
+              estimatedTime: req.body.estimatedTime,
+              materialsNeeded: req.body.materialsNeeded,
+            },
+            { where: { id: req.params.id } }
+          );
+          res.status(204).end();
+        } else {
+          res.status(403).json({
+            message:
+              "Authentication Failed. You do not have access to update this course",
+          });
+        }
       } else {
-        res.status(404).json({ message: "course not found" });
+        res.status(404).json({ message: "Course not found" });
       }
     } catch (error) {
       if (error.name === "SequelizeValidationError") {
@@ -133,6 +159,26 @@ router.delete(
       } else {
         throw error;
       }
+    }
+  })
+);
+
+//Send a DELETE request to /course/:id to Delete a course
+router.delete(
+  "/courses/:id",
+  authenticateUser,
+  asyncHandler(async (req, res, next) => {
+    const user = req.currentUser;
+    const course = await Course.findByPk(req.params.id);
+    //checks if the course belongs to the current authenticated user
+    if (course.userId === user.id) {
+      await course.destroy();
+      res.status(204).end();
+    } else {
+      res.status(403).json({
+        message:
+          "Authentication Failed. You do not have access to delete this course",
+      });
     }
   })
 );
