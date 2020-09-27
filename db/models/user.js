@@ -12,11 +12,26 @@ module.exports = (sequelize) => {
       firstName: {
         type: Sequelize.STRING,
         allowNull: false,
-        unique: true,
+        validate: {
+          notNull: {
+            msg: "Please provide a value for Firstname",
+          },
+          notEmpty: {
+            msg: "Firstname cannot be empty",
+          },
+        },
       },
       lastName: {
         type: Sequelize.STRING,
         allowNull: false,
+        validate: {
+          notNull: {
+            msg: "Please provide a value for Lastname",
+          },
+          notEmpty: {
+            msg: "Lastname cannot be empty",
+          },
+        },
       },
       emailAddress: {
         type: Sequelize.STRING,
@@ -28,13 +43,24 @@ module.exports = (sequelize) => {
         },
         validate: {
           isEmail: {
-            msg: "The email address you provided is not valid email",
+            msg: "The email address you provided is not a valid email",
+          },
+          notEmpty: {
+            msg: "Email Address cannot be empty",
           },
         },
       },
       password: {
         type: Sequelize.STRING,
         allowNull: false,
+        validate: {
+          notNull: {
+            msg: "Please provide a value for the password",
+          },
+          notEmpty: {
+            msg: "Password cannot be empty",
+          },
+        },
       },
     },
     { sequelize }

@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const bcryptjs = require("bcryptjs");
-const { check, validationResult } = require("express-validator");
 
 const { sequelize, models } = require("../db");
 
@@ -41,10 +40,7 @@ router.post(
     const user = req.body;
     try {
       if (
-        user.firstName &&
-        user.lastName &&
-        user.emailAddress &&
-        user.password
+       user
       ) {
         //Hashing the user password before persisting the data in the database
         user.password = bcryptjs.hashSync(user.password);
@@ -56,11 +52,6 @@ router.post(
         });
 
         res.status(201).location("/").end();
-      } else {
-        res.status(400).json({
-          message:
-            "firstName, lastName, emailAddress and password are required",
-        });
       }
     } catch (error) {
       if (error.name === "SequelizeValidationError") {
