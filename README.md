@@ -1,6 +1,6 @@
-# REST API Project
+# RESTful API Project
 
-The REST API provides a way for users to administer a school database containing information about courses. Users can interact with the database by retrieving a list of courses, as well as adding, updating and deleting courses in the database.
+The RESTful API provides a way for users to administer a school database containing information about courses. Users can interact with the database by retrieving a list of courses, as well as adding, updating and deleting courses in the database.
 In order to make changes to the database users are required to create an account and log-in via postman
 
 ## Technologies
